@@ -1,11 +1,13 @@
+export type LikertValue = "strongly_agree" | "agree" | "neutral" | "disagree" | "strongly_disagree";
+
 export interface Question {
   id: number;
   question: string;
-  category: 'interest' | 'aptitude' | 'personality' | 'values';
+  section: string;
+  weights: Record<string, number>; // Career cluster weights applied to the Likert score
   options: {
     text: string;
-    value: string;
-    scores: Record<string, number>;
+    value: LikertValue;
   }[];
 }
 
@@ -20,214 +22,353 @@ export interface CareerCategory {
 export const careerCategories: CareerCategory[] = [
   {
     id: 'science_tech',
-    name: 'Science & Technology',
-    description: 'Engineering, IT, Research, and Innovation',
+    name: 'Technology & Engineering',
+    description: 'Building systems, solving logical problems, and applied science',
     icon: '🔬',
-    careers: ['Software Engineer', 'Data Scientist', 'Doctor', 'Research Scientist', 'Civil Engineer', 'Biotechnologist'],
+    careers: ['Software Engineer', 'Data Engineer', 'Systems Analyst', 'Research Engineer', 'Product Technologist', 'Robotics/Automation'],
   },
   {
     id: 'commerce_finance',
-    name: 'Commerce & Finance',
-    description: 'Business, Banking, and Financial Services',
+    name: 'Business, Finance & Analytics',
+    description: 'Markets, numbers, strategy, and decision-making',
     icon: '📊',
-    careers: ['Chartered Accountant', 'Investment Banker', 'Business Analyst', 'Financial Advisor', 'Entrepreneur'],
+    careers: ['Business Analyst', 'Financial Analyst', 'Growth/Strategy', 'Operations Analyst', 'Product Ops', 'Entrepreneurship'],
   },
   {
     id: 'arts_humanities',
-    name: 'Arts & Humanities',
-    description: 'Literature, History, Languages, and Social Sciences',
+    name: 'Arts, Humanities & Social Impact',
+    description: 'Communication, culture, education, and community impact',
     icon: '📚',
-    careers: ['Journalist', 'Lawyer', 'Psychologist', 'Teacher', 'Social Worker', 'Content Writer'],
+    careers: ['Psychology/Education', 'Policy/Community Programs', 'Content/Communication', 'Researcher', 'Law/Advocacy'],
   },
   {
     id: 'creative',
     name: 'Creative & Design',
-    description: 'Art, Design, Media, and Entertainment',
+    description: 'Visual thinking, storytelling, and experience design',
     icon: '🎨',
-    careers: ['Graphic Designer', 'Architect', 'Film Director', 'Fashion Designer', 'UI/UX Designer', 'Animator'],
+    careers: ['UI/UX Designer', 'Product Designer', 'Visual/Brand Designer', 'Content/Media Design', 'Architecture/Spatial'],
   },
   {
     id: 'government',
-    name: 'Government & Public Service',
-    description: 'Civil Services, Defense, and Public Administration',
+    name: 'Leadership & Public Service',
+    description: 'Decision-making, policy, operations, and leading teams',
     icon: '🏛️',
-    careers: ['IAS Officer', 'IPS Officer', 'Defense Officer', 'Diplomat', 'Public Policy Analyst'],
+    careers: ['Program/Project Leadership', 'Policy/Administration', 'Defense/Services', 'Product/Operations Leadership', 'People & Culture'],
   },
   {
     id: 'healthcare',
-    name: 'Healthcare & Medicine',
-    description: 'Medical, Nursing, and Allied Health Services',
+    name: 'Healthcare & Life Sciences',
+    description: 'Care, precision, and applied life sciences',
     icon: '⚕️',
-    careers: ['Doctor', 'Surgeon', 'Nurse', 'Pharmacist', 'Physiotherapist', 'Medical Researcher'],
+    careers: ['Healthcare Practitioner', 'Clinical Research', 'Public Health', 'Lab Technologist', 'Allied Health Services'],
   },
 ];
 
+const likertOptions = [
+  { text: "Strongly Agree", value: "strongly_agree" as LikertValue },
+  { text: "Agree", value: "agree" as LikertValue },
+  { text: "Neutral", value: "neutral" as LikertValue },
+  { text: "Disagree", value: "disagree" as LikertValue },
+  { text: "Strongly Disagree", value: "strongly_disagree" as LikertValue },
+];
+
+const scoreByResponse: Record<LikertValue, number> = {
+  strongly_agree: 2,
+  agree: 1,
+  neutral: 0,
+  disagree: -1,
+  strongly_disagree: -2,
+};
+
 export const assessmentQuestions: Question[] = [
-  // Interest-based questions
+  // SECTION 1: THINKING & PERSONALITY
   {
     id: 1,
-    question: 'Which activity do you enjoy the most during your free time?',
-    category: 'interest',
-    options: [
-      { text: 'Solving puzzles or playing strategy games', value: 'puzzle', scores: { science_tech: 3, commerce_finance: 2 } },
-      { text: 'Reading books or writing stories', value: 'reading', scores: { arts_humanities: 3, creative: 2 } },
-      { text: 'Drawing, painting, or crafting', value: 'art', scores: { creative: 3, arts_humanities: 1 } },
-      { text: 'Participating in debates or discussions', value: 'debate', scores: { government: 3, arts_humanities: 2 } },
-    ],
+    question: "I enjoy solving problems that have clear, logical steps.",
+    section: "Thinking & Personality",
+    weights: { science_tech: 1, commerce_finance: 0.5 },
+    options: likertOptions,
   },
   {
     id: 2,
-    question: 'Which subject do you find most interesting in school?',
-    category: 'interest',
-    options: [
-      { text: 'Mathematics and Physics', value: 'math_physics', scores: { science_tech: 3, commerce_finance: 1 } },
-      { text: 'Biology and Chemistry', value: 'biology', scores: { healthcare: 3, science_tech: 2 } },
-      { text: 'Economics and Business Studies', value: 'commerce', scores: { commerce_finance: 3, government: 1 } },
-      { text: 'History, Geography, or Political Science', value: 'humanities', scores: { government: 3, arts_humanities: 2 } },
-    ],
+    question: "I enjoy imagining new ideas or possibilities.",
+    section: "Thinking & Personality",
+    weights: { creative: 1, arts_humanities: 0.5 },
+    options: likertOptions,
   },
   {
     id: 3,
-    question: 'What kind of problems do you prefer solving?',
-    category: 'aptitude',
-    options: [
-      { text: 'Technical problems involving calculations', value: 'technical', scores: { science_tech: 3, commerce_finance: 2 } },
-      { text: 'Understanding human behavior and emotions', value: 'human', scores: { healthcare: 2, arts_humanities: 3 } },
-      { text: 'Designing creative solutions', value: 'creative', scores: { creative: 3, science_tech: 1 } },
-      { text: 'Managing resources and planning', value: 'management', scores: { commerce_finance: 3, government: 2 } },
-    ],
+    question: "I feel satisfied when I help someone else succeed.",
+    section: "Thinking & Personality",
+    weights: { healthcare: 1, arts_humanities: 0.5 },
+    options: likertOptions,
   },
   {
     id: 4,
-    question: 'How do you prefer to work?',
-    category: 'personality',
-    options: [
-      { text: 'Independently with minimal supervision', value: 'independent', scores: { science_tech: 2, creative: 3 } },
-      { text: 'In a team with collaborative efforts', value: 'team', scores: { commerce_finance: 2, government: 2, healthcare: 2 } },
-      { text: 'Leading and guiding others', value: 'leader', scores: { government: 3, commerce_finance: 2 } },
-      { text: 'Supporting and helping people directly', value: 'support', scores: { healthcare: 3, arts_humanities: 2 } },
-    ],
+    question: "I like taking responsibility and leading others.",
+    section: "Thinking & Personality",
+    weights: { government: 1, commerce_finance: 0.5 },
+    options: likertOptions,
   },
   {
     id: 5,
-    question: 'What motivates you the most in your studies?',
-    category: 'values',
-    options: [
-      { text: 'Achieving high marks and academic excellence', value: 'achievement', scores: { science_tech: 2, commerce_finance: 2 } },
-      { text: 'Learning new skills and gaining knowledge', value: 'learning', scores: { arts_humanities: 2, science_tech: 2 } },
-      { text: 'Preparing for competitive exams like JEE/NEET/UPSC', value: 'competitive', scores: { science_tech: 2, healthcare: 2, government: 3 } },
-      { text: 'Building something of my own someday', value: 'entrepreneurship', scores: { commerce_finance: 3, creative: 2 } },
-    ],
+    question: "I prefer clear instructions rather than open-ended tasks.",
+    section: "Thinking & Personality",
+    weights: { science_tech: 0.5, commerce_finance: 0.5, government: 0.3 },
+    options: likertOptions,
   },
   {
     id: 6,
-    question: 'Which environment would you prefer working in?',
-    category: 'personality',
-    options: [
-      { text: 'A laboratory or research center', value: 'lab', scores: { science_tech: 3, healthcare: 2 } },
-      { text: 'A corporate office or business setup', value: 'corporate', scores: { commerce_finance: 3, government: 1 } },
-      { text: 'Outdoors or in the field', value: 'field', scores: { government: 2, healthcare: 1, creative: 1 } },
-      { text: 'A creative studio or workspace', value: 'studio', scores: { creative: 3, arts_humanities: 1 } },
-    ],
+    question: "I feel comfortable working independently for long periods.",
+    section: "Thinking & Personality",
+    weights: { science_tech: 0.5, creative: 0.5 },
+    options: likertOptions,
   },
   {
     id: 7,
-    question: 'How do you handle stressful situations?',
-    category: 'personality',
-    options: [
-      { text: 'I stay calm and analyze the situation logically', value: 'calm', scores: { science_tech: 2, healthcare: 2, government: 2 } },
-      { text: 'I seek help from friends or mentors', value: 'seek_help', scores: { arts_humanities: 2, healthcare: 2 } },
-      { text: 'I find creative ways to deal with stress', value: 'creative_cope', scores: { creative: 3, arts_humanities: 1 } },
-      { text: 'I focus on the goal and push through', value: 'push', scores: { commerce_finance: 2, government: 3 } },
-    ],
+    question: "I get bored when tasks feel repetitive.",
+    section: "Thinking & Personality",
+    weights: { creative: 1, science_tech: 0.3 },
+    options: likertOptions,
   },
   {
     id: 8,
-    question: 'Which of these roles appeals to you the most?',
-    category: 'interest',
-    options: [
-      { text: 'A scientist developing new technologies', value: 'scientist', scores: { science_tech: 3 } },
-      { text: 'A doctor saving lives in a hospital', value: 'doctor', scores: { healthcare: 3 } },
-      { text: 'A CEO running a successful company', value: 'ceo', scores: { commerce_finance: 3 } },
-      { text: 'An IAS officer serving the nation', value: 'ias', scores: { government: 3 } },
-    ],
+    question: "I enjoy challenges that push me outside my comfort zone.",
+    section: "Thinking & Personality",
+    weights: { government: 0.5, creative: 0.5, science_tech: 0.3 },
+    options: likertOptions,
   },
+
+  // SECTION 2: LEARNING STYLE
   {
     id: 9,
-    question: 'What kind of impact do you want to make?',
-    category: 'values',
-    options: [
-      { text: 'Innovating and advancing technology', value: 'innovation', scores: { science_tech: 3, creative: 1 } },
-      { text: 'Improving people\'s health and wellbeing', value: 'health', scores: { healthcare: 3 } },
-      { text: 'Creating wealth and economic growth', value: 'wealth', scores: { commerce_finance: 3 } },
-      { text: 'Shaping policies and serving society', value: 'society', scores: { government: 3, arts_humanities: 2 } },
-    ],
+    question: "I understand concepts better when I see visual examples or diagrams.",
+    section: "Learning Style",
+    weights: { creative: 0.7, science_tech: 0.5 },
+    options: likertOptions,
   },
   {
     id: 10,
-    question: 'How important is financial stability to you?',
-    category: 'values',
-    options: [
-      { text: 'Very important - it\'s my top priority', value: 'high', scores: { commerce_finance: 3, science_tech: 1 } },
-      { text: 'Important, but not at the cost of passion', value: 'balanced', scores: { creative: 2, arts_humanities: 2 } },
-      { text: 'I prefer job security over high salary', value: 'security', scores: { government: 3, healthcare: 1 } },
-      { text: 'I want to make a difference, money is secondary', value: 'purpose', scores: { arts_humanities: 3, healthcare: 2 } },
-    ],
+    question: "I enjoy learning by doing rather than reading.",
+    section: "Learning Style",
+    weights: { science_tech: 0.7, creative: 0.5 },
+    options: likertOptions,
   },
   {
     id: 11,
-    question: 'Which skill do you want to develop the most?',
-    category: 'aptitude',
-    options: [
-      { text: 'Coding and technical skills', value: 'coding', scores: { science_tech: 3 } },
-      { text: 'Communication and public speaking', value: 'communication', scores: { government: 2, arts_humanities: 2, commerce_finance: 2 } },
-      { text: 'Creative and artistic abilities', value: 'creative', scores: { creative: 3 } },
-      { text: 'Medical and healthcare knowledge', value: 'medical', scores: { healthcare: 3 } },
-    ],
+    question: "I prefer subjects where there is one correct answer.",
+    section: "Learning Style",
+    weights: { science_tech: 0.8, commerce_finance: 0.4 },
+    options: likertOptions,
   },
   {
     id: 12,
-    question: 'What type of challenges excite you?',
-    category: 'aptitude',
-    options: [
-      { text: 'Building apps or machines', value: 'building', scores: { science_tech: 3, creative: 1 } },
-      { text: 'Understanding complex business strategies', value: 'business', scores: { commerce_finance: 3 } },
-      { text: 'Diagnosing and treating health issues', value: 'diagnosis', scores: { healthcare: 3 } },
-      { text: 'Solving social and political issues', value: 'social', scores: { government: 3, arts_humanities: 2 } },
-    ],
+    question: "I enjoy subjects that allow multiple ways of thinking.",
+    section: "Learning Style",
+    weights: { creative: 0.7, arts_humanities: 0.7 },
+    options: likertOptions,
   },
   {
     id: 13,
-    question: 'How do you prefer to learn new things?',
-    category: 'personality',
-    options: [
-      { text: 'Through experiments and hands-on practice', value: 'hands_on', scores: { science_tech: 2, healthcare: 2, creative: 2 } },
-      { text: 'By reading books and research papers', value: 'reading', scores: { arts_humanities: 3, government: 1 } },
-      { text: 'Through discussions and debates', value: 'discussion', scores: { government: 2, commerce_finance: 2 } },
-      { text: 'By observing and analyzing patterns', value: 'observe', scores: { science_tech: 2, commerce_finance: 2 } },
-    ],
+    question: "I feel stressed when a subject requires heavy memorization.",
+    section: "Learning Style",
+    weights: { creative: 0.6, science_tech: 0.4 },
+    options: likertOptions,
   },
   {
     id: 14,
-    question: 'Which of these would you find most rewarding?',
-    category: 'values',
-    options: [
-      { text: 'Getting a patent for an invention', value: 'patent', scores: { science_tech: 3 } },
-      { text: 'Saving a patient\'s life', value: 'save_life', scores: { healthcare: 3 } },
-      { text: 'Building a successful startup', value: 'startup', scores: { commerce_finance: 3, creative: 1 } },
-      { text: 'Implementing a policy that helps millions', value: 'policy', scores: { government: 3 } },
-    ],
+    question: "I like explaining what I learn to others.",
+    section: "Learning Style",
+    weights: { arts_humanities: 0.7, healthcare: 0.5, government: 0.3 },
+    options: likertOptions,
   },
   {
     id: 15,
-    question: 'Where do you see yourself in 10 years?',
-    category: 'interest',
-    options: [
-      { text: 'Leading a tech team at a top company', value: 'tech_lead', scores: { science_tech: 3 } },
-      { text: 'Running my own successful business', value: 'business_owner', scores: { commerce_finance: 3, creative: 1 } },
-      { text: 'Working in a reputed hospital or clinic', value: 'hospital', scores: { healthcare: 3 } },
-      { text: 'Serving in a prestigious government position', value: 'govt_position', scores: { government: 3 } },
-    ],
+    question: "I enjoy working on projects more than preparing for exams.",
+    section: "Learning Style",
+    weights: { creative: 0.6, science_tech: 0.4 },
+    options: likertOptions,
+  },
+  {
+    id: 16,
+    question: "I manage my time well during exams.",
+    section: "Learning Style",
+    weights: { commerce_finance: 0.6, science_tech: 0.5, government: 0.3 },
+    options: likertOptions,
+  },
+
+  // SECTION 3: CREATIVITY & STRUCTURE
+  {
+    id: 17,
+    question: "I enjoy creating or designing things from scratch.",
+    section: "Creativity & Structure",
+    weights: { creative: 1, arts_humanities: 0.5 },
+    options: likertOptions,
+  },
+  {
+    id: 18,
+    question: "I often think about how things could be improved or redesigned.",
+    section: "Creativity & Structure",
+    weights: { creative: 0.8, science_tech: 0.5 },
+    options: likertOptions,
+  },
+  {
+    id: 19,
+    question: "I enjoy working with shapes, space, or visual layouts.",
+    section: "Creativity & Structure",
+    weights: { creative: 0.8, science_tech: 0.4 },
+    options: likertOptions,
+  },
+  {
+    id: 20,
+    question: "I enjoy working with numbers and calculations.",
+    section: "Creativity & Structure",
+    weights: { commerce_finance: 0.8, science_tech: 0.8 },
+    options: likertOptions,
+  },
+  {
+    id: 21,
+    question: "I feel patient working on long projects.",
+    section: "Creativity & Structure",
+    weights: { science_tech: 0.6, healthcare: 0.4, government: 0.4 },
+    options: likertOptions,
+  },
+  {
+    id: 22,
+    question: "I prefer structured tasks over flexible ones.",
+    section: "Creativity & Structure",
+    weights: { commerce_finance: 0.6, government: 0.6, science_tech: 0.4 },
+    options: likertOptions,
+  },
+  {
+    id: 23,
+    question: "I enjoy learning new tools, skills, or software.",
+    section: "Creativity & Structure",
+    weights: { science_tech: 0.8, creative: 0.6 },
+    options: likertOptions,
+  },
+  {
+    id: 24,
+    question: "I like tasks where the outcome is visible or tangible.",
+    section: "Creativity & Structure",
+    weights: { creative: 0.6, science_tech: 0.6, healthcare: 0.3 },
+    options: likertOptions,
+  },
+
+  // SECTION 4: WORK STYLE & FUTURE
+  {
+    id: 25,
+    question: "I prefer a predictable routine rather than changing tasks.",
+    section: "Work Style & Future",
+    weights: { government: 0.5, commerce_finance: 0.5, healthcare: 0.4 },
+    options: likertOptions,
+  },
+  {
+    id: 26,
+    question: "I enjoy working in teams.",
+    section: "Work Style & Future",
+    weights: { commerce_finance: 0.6, healthcare: 0.6, government: 0.5 },
+    options: likertOptions,
+  },
+  {
+    id: 27,
+    question: "I am comfortable with uncertainty about the future.",
+    section: "Work Style & Future",
+    weights: { creative: 0.5, science_tech: 0.4, commerce_finance: 0.4 },
+    options: likertOptions,
+  },
+  {
+    id: 28,
+    question: "I value creativity more than stability.",
+    section: "Work Style & Future",
+    weights: { creative: 1, arts_humanities: 0.5 },
+    options: likertOptions,
+  },
+  {
+    id: 29,
+    question: "I would enjoy a career that helps people directly.",
+    section: "Work Style & Future",
+    weights: { healthcare: 0.9, government: 0.5, arts_humanities: 0.4 },
+    options: likertOptions,
+  },
+  {
+    id: 30,
+    question: "I would enjoy a career that involves analysis and logical thinking.",
+    section: "Work Style & Future",
+    weights: { science_tech: 0.8, commerce_finance: 0.6 },
+    options: likertOptions,
+  },
+  {
+    id: 31,
+    question: "I would enjoy a career that involves creativity and design.",
+    section: "Work Style & Future",
+    weights: { creative: 1, arts_humanities: 0.5 },
+    options: likertOptions,
+  },
+  {
+    id: 32,
+    question: "I would enjoy a career that involves leadership and decision-making.",
+    section: "Work Style & Future",
+    weights: { government: 0.9, commerce_finance: 0.6 },
+    options: likertOptions,
+  },
+
+  // SECTION 5: EMOTIONAL SIGNALS & MOTIVATION
+  {
+    id: 33,
+    question: "Thinking about my future career excites me.",
+    section: "Emotional Signals & Motivation",
+    weights: { science_tech: 0.3, creative: 0.3, commerce_finance: 0.3 },
+    options: likertOptions,
+  },
+  {
+    id: 34,
+    question: "I feel pressure from others when thinking about my career.",
+    section: "Emotional Signals & Motivation",
+    weights: { arts_humanities: 0.2, commerce_finance: 0.2, government: 0.2 },
+    options: likertOptions,
+  },
+  {
+    id: 35,
+    question: "I feel confident making long-term decisions.",
+    section: "Emotional Signals & Motivation",
+    weights: { government: 0.5, commerce_finance: 0.5, science_tech: 0.4 },
+    options: likertOptions,
+  },
+  {
+    id: 36,
+    question: "I enjoy learning even when there is no exam or reward.",
+    section: "Emotional Signals & Motivation",
+    weights: { arts_humanities: 0.5, science_tech: 0.5, creative: 0.4 },
+    options: likertOptions,
+  },
+  {
+    id: 37,
+    question: "I like exploring new interests even if I’m unsure.",
+    section: "Emotional Signals & Motivation",
+    weights: { creative: 0.6, arts_humanities: 0.4 },
+    options: likertOptions,
+  },
+  {
+    id: 38,
+    question: "I worry about choosing the wrong career.",
+    section: "Emotional Signals & Motivation",
+    weights: { commerce_finance: 0.3, government: 0.3, healthcare: 0.3 },
+    options: likertOptions,
+  },
+  {
+    id: 39,
+    question: "I feel motivated when my work has meaning.",
+    section: "Emotional Signals & Motivation",
+    weights: { healthcare: 0.7, arts_humanities: 0.6, government: 0.5 },
+    options: likertOptions,
+  },
+  {
+    id: 40,
+    question: "I feel ready to explore my career options seriously.",
+    section: "Emotional Signals & Motivation",
+    weights: { science_tech: 0.4, commerce_finance: 0.4, arts_humanities: 0.4, creative: 0.4, government: 0.4, healthcare: 0.4 },
+    options: likertOptions,
   },
 ];
 
@@ -242,15 +383,15 @@ export const calculateScores = (answers: Record<number, string>): Record<string,
   };
 
   Object.entries(answers).forEach(([questionId, selectedValue]) => {
-    const question = assessmentQuestions.find(q => q.id === parseInt(questionId));
-    if (question) {
-      const selectedOption = question.options.find(opt => opt.value === selectedValue);
-      if (selectedOption) {
-        Object.entries(selectedOption.scores).forEach(([category, score]) => {
-          scores[category] = (scores[category] || 0) + score;
-        });
-      }
-    }
+    const question = assessmentQuestions.find((q) => q.id === parseInt(questionId));
+    if (!question) return;
+
+    const numericScore = scoreByResponse[selectedValue as LikertValue];
+    if (numericScore === undefined) return;
+
+    Object.entries(question.weights).forEach(([category, weight]) => {
+      scores[category] = (scores[category] || 0) + numericScore * weight;
+    });
   });
 
   return scores;
@@ -260,7 +401,7 @@ export const getTopCategories = (scores: Record<string, number>, count: number =
   const sortedCategories = Object.entries(scores)
     .sort(([, a], [, b]) => b - a)
     .slice(0, count)
-    .map(([categoryId]) => careerCategories.find(c => c.id === categoryId)!)
+    .map(([categoryId]) => careerCategories.find((c) => c.id === categoryId)!)
     .filter(Boolean);
 
   return sortedCategories;

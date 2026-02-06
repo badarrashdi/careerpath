@@ -112,7 +112,7 @@ const Auth = () => {
                 <GraduationCap className="h-6 w-6 text-primary-foreground" />
               </div>
               <span className="font-display font-bold text-xl text-primary">
-                CareerPath<span className="text-secondary">India</span>
+                CareerPath
               </span>
             </Link>
             

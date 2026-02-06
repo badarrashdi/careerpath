@@ -13,7 +13,7 @@ import {
   TrendingUp,
   Shield
 } from "lucide-react";
-import heroImage from "@/assets/hero-students.jpg";
+const heroImage = "https://images.unsplash.com/photo-1523580846011-d3a5bc25702b?auto=format&fit=crop&w=1600&q=80";
 
 const Index = () => {
   const features = [
@@ -25,7 +25,7 @@ const Index = () => {
     {
       icon: Brain,
       title: "AI-Powered Analysis",
-      description: "Advanced Gemini AI analyzes your responses to provide deep insights and personalized career recommendations.",
+      description: "Our CareerPath AI analyzes your responses to provide deep insights and personalized career recommendations.",
     },
     {
       icon: Award,
@@ -44,6 +44,48 @@ const Index = () => {
     { number: "95%", label: "Accuracy Rate" },
     { number: "200+", label: "Career Paths" },
     { number: "4.8★", label: "User Rating" },
+  ];
+
+  const pricingPlans = [
+    {
+      name: "Standard Assessment",
+      price: "₹499",
+      cadence: "one-time",
+      description: "Full 40-question assessment with instant AI report and top career clusters.",
+      features: [
+        "Personalized PATHORA report",
+        "Top 3 career clusters with guidance",
+        "Actionable next steps and skills",
+        "Email copy of your results",
+      ],
+      highlight: false,
+    },
+    {
+      name: "Premium Guidance",
+      price: "₹899",
+      cadence: "one-time",
+      description: "Everything in Standard plus deeper recommendations and interview-ready talking points.",
+      features: [
+        "Expanded career pathways",
+        "Skill gaps with learning plan",
+        "Suggested projects to showcase",
+        "Parent/mentor summary",
+      ],
+      highlight: true,
+    },
+    {
+      name: "Counselor Review",
+      price: "₹1,499",
+      cadence: "one-time",
+      description: "Premium report plus an optional counselor review (payment activation coming soon).",
+      features: [
+        "Everything in Premium",
+        "Human review signal for your report",
+        "Priority support when payments go live",
+        "Early-access pricing locked in",
+      ],
+      highlight: false,
+    },
   ];
 
   const careerStreams = [
@@ -66,6 +108,8 @@ const Index = () => {
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-secondary/20 rounded-full blur-3xl" />
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent/10 rounded-full blur-3xl" />
         </div>
+        {/* Dark overlay to keep hero copy legible on bright backgrounds */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950/80 via-slate-900/75 to-slate-800/65" aria-hidden="true" />
         
         <div className="container mx-auto px-4 pt-24 pb-16 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -82,14 +126,14 @@ const Index = () => {
               </h1>
               
               <p className="text-lg md:text-xl text-white/80 max-w-xl">
-                India's most trusted AI-powered career assessment for students. 
+                India's trusted AI-powered career assessment for students. 
                 Get personalized recommendations aligned with your interests, aptitude, and the Indian education system.
               </p>
               
               <div className="flex flex-wrap gap-4">
                 <Link to="/auth?mode=signup">
                   <Button variant="hero" size="xl" className="gap-2">
-                    Start Free Assessment
+                    Start Assessment
                     <ArrowRight className="h-5 w-5" />
                   </Button>
                 </Link>
@@ -118,35 +162,11 @@ const Index = () => {
             </div>
             
             <div className="relative hidden lg:block animate-slide-up stagger-2">
-              <div className="relative">
-                <img
-                  src={heroImage}
-                  alt="Indian students studying together"
-                  className="rounded-2xl shadow-elevated object-cover w-full h-[500px]"
-                />
-                <div className="absolute -bottom-6 -left-6 glass-card rounded-xl p-4 animate-bounce-soft">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-success flex items-center justify-center">
-                      <CheckCircle2 className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">Assessment Complete!</p>
-                      <p className="text-sm text-muted-foreground">Your results are ready</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="absolute -top-6 -right-6 glass-card rounded-xl p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-secondary flex items-center justify-center">
-                      <Brain className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-foreground">AI Analysis</p>
-                      <p className="text-sm text-muted-foreground">Powered by Gemini</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <img
+                src={heroImage}
+                alt="Students collaborating in a study space"
+                className="rounded-2xl shadow-elevated object-cover w-full h-[500px]"
+              />
             </div>
           </div>
         </div>
@@ -177,7 +197,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center max-w-3xl mx-auto mb-16">
             <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Why Choose <span className="text-secondary">CareerPath India</span>?
+              Why Choose <span className="text-secondary">CareerPath</span>?
             </h2>
             <p className="text-lg text-muted-foreground">
               Our comprehensive assessment is designed specifically for Indian students, 
@@ -200,6 +220,63 @@ const Index = () => {
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">
                   {feature.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-3xl mx-auto mb-12 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-secondary/10 text-secondary rounded-full text-sm font-medium">
+              Payment activation coming soon
+            </div>
+            <h2 className="font-display text-3xl md:text-4xl font-bold text-foreground">
+              Simple pricing built for students
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Transparent, one-time pricing. Payments will be enabled soon—your plan and pricing will be honored when checkout goes live.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pricingPlans.map((plan, index) => (
+              <div
+                key={plan.name}
+                className={`p-6 rounded-2xl border bg-card shadow-card animate-fade-in ${plan.highlight ? "border-primary/60 ring-2 ring-primary/10" : "border-border"}`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-display text-xl font-semibold text-foreground">{plan.name}</h3>
+                  {plan.highlight && (
+                    <span className="text-xs px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold">
+                      Most Popular
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-baseline gap-2 mb-2">
+                  <span className="text-3xl font-bold text-primary">{plan.price}</span>
+                  <span className="text-sm text-muted-foreground">{plan.cadence}</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-6">{plan.description}</p>
+                <ul className="space-y-2 mb-6 text-sm text-foreground">
+                  {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link to="/auth?mode=signup">
+                  <Button className="w-full" variant={plan.highlight ? "default" : "outline"}>
+                    Continue to Assessment
+                  </Button>
+                </Link>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Checkout will be enabled soon. Your selection will reserve this price.
                 </p>
               </div>
             ))}
@@ -236,8 +313,9 @@ const Index = () => {
 
       {/* CTA Section */}
       <section className="py-20 hero-gradient hero-pattern relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-secondary/20 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-slate-900/70" aria-hidden="true" />
+        <div className="absolute inset-0" aria-hidden="true">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-secondary/30 rounded-full blur-3xl" />
         </div>
         
         <div className="container mx-auto px-4 relative z-10 text-center">
@@ -246,7 +324,7 @@ const Index = () => {
               Ready to Discover Your Career Path?
             </h2>
             <p className="text-lg text-white/80">
-              Take our free 10-minute assessment and get personalized career recommendations 
+              Take our 10-minute assessment and get personalized career recommendations 
               powered by advanced AI technology.
             </p>
             <div className="flex flex-wrap justify-center gap-4 pt-4">
@@ -260,15 +338,15 @@ const Index = () => {
             <div className="flex items-center justify-center gap-6 pt-6 text-white/70 text-sm">
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
-                <span>100% Free</span>
+                <span>Transparent pricing</span>
               </div>
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                <span>No Credit Card</span>
+                <span>No hidden fees</span>
               </div>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4" />
-                <span>Instant Results</span>
+                <span>Instant results</span>
               </div>
             </div>
           </div>
@@ -288,7 +366,7 @@ const Index = () => {
               </span>
             </div>
             <p className="text-muted-foreground text-sm">
-              © 2024 CareerPath India. Helping students find their perfect career path.
+              © 2026 CareerPath. Helping students find their perfect career path.
             </p>
           </div>
         </div>

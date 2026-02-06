@@ -5,9 +5,11 @@ import { Progress } from "@/components/ui/progress";
 import { Navbar } from "@/components/layout/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { firestore } from "@/integrations/firebase/client";
 import { assessmentQuestions, calculateScores } from "@/data/assessmentQuestions";
+import { buildCareerAnalysis } from "@/lib/analysis";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
 const Assessment = () => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -52,15 +54,53 @@ const Assessment = () => {
 
     try {
       const scores = calculateScores(answers);
+      const aiAnalysis = buildCareerAnalysis(scores);
 
-      // Save to database
-      const { error } = await supabase.from("assessment_results").insert({
-        user_id: user.id,
-        answers: answers,
-        scores: scores,
+      const docRef = await addDoc(collection(firestore, "assessment_results"), {
+        userId: user.uid,
+        answers,
+        scores,
+        aiAnalysis,
+        completedAt: serverTimestamp(),
       });
 
-      if (error) throw error;
+      const emailFunctionUrl = import.meta.env.VITE_EMAIL_FUNCTION_URL;
+      const userEmail = user.email;
+
+      if (emailFunctionUrl && userEmail) {
+        const answerDetails = assessmentQuestions.map((q) => ({
+          id: q.id,
+          question: q.question,
+          section: q.section,
+          selected: answers[q.id] || "",
+        }));
+
+        try {
+          await fetch(emailFunctionUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userEmail,
+              adminEmail: "rashdibadar@gmail.com",
+              aiAnalysis,
+              answers,
+              answerDetails,
+              scores,
+              resultId: docRef.id,
+              userId: user.uid,
+            }),
+          });
+        } catch (emailError) {
+          console.error("Email dispatch failed", emailError);
+          toast({
+            variant: "destructive",
+            title: "Could not send email copy",
+            description: "Your results are saved. We will email them soon.",
+          });
+        }
+      }
 
       toast({
         title: "Assessment Complete!",
@@ -89,11 +129,12 @@ const Assessment = () => {
 
   if (!question) return null;
 
-  const categoryColors = {
-    interest: "bg-blue-100 text-blue-700",
-    aptitude: "bg-purple-100 text-purple-700",
-    personality: "bg-green-100 text-green-700",
-    values: "bg-orange-100 text-orange-700",
+  const sectionColors: Record<string, string> = {
+    "Thinking & Personality": "bg-blue-100 text-blue-700",
+    "Learning Style": "bg-purple-100 text-purple-700",
+    "Creativity & Structure": "bg-green-100 text-green-700",
+    "Work Style & Future": "bg-orange-100 text-orange-700",
+    "Emotional Signals & Motivation": "bg-pink-100 text-pink-700",
   };
 
   return (
@@ -118,8 +159,8 @@ const Assessment = () => {
           {/* Question Card */}
           <div className="question-card animate-scale-in" key={question.id}>
             <div className="mb-6">
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${categoryColors[question.category]}`}>
-                {question.category.charAt(0).toUpperCase() + question.category.slice(1)}
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${sectionColors[question.section] || "bg-muted text-foreground"}`}>
+                {question.section}
               </span>
             </div>
 

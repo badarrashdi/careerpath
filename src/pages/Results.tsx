@@ -4,8 +4,20 @@ import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { careerCategories, getTopCategories } from "@/data/assessmentQuestions";
+import { firestore } from "@/integrations/firebase/client";
+import { buildCareerAnalysis } from "@/lib/analysis";
+import {
+  collection,
+  doc,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  Timestamp,
+  updateDoc,
+  where,
+} from "firebase/firestore";
 import { 
   Loader2, 
   RefreshCw, 
@@ -22,15 +34,15 @@ import ReactMarkdown from "react-markdown";
 interface AssessmentResult {
   id: string;
   scores: Record<string, number>;
-  ai_analysis: string | null;
-  completed_at: string;
+  aiAnalysis: string | null;
+  completedAt: string;
 }
 
 interface RawAssessmentResult {
   id: string;
   scores: unknown;
-  ai_analysis: string | null;
-  completed_at: string;
+  aiAnalysis: string | null;
+  completedAt: Timestamp | string | undefined;
 }
 
 const Results = () => {
@@ -56,35 +68,39 @@ const Results = () => {
 
   const fetchResults = async () => {
     try {
-      const { data, error } = await supabase
-        .from("assessment_results")
-        .select("*")
-        .eq("user_id", user?.id)
-        .order("completed_at", { ascending: false })
-        .limit(1)
-        .single();
+      const resultsRef = collection(firestore, "assessment_results");
+      const resultsQuery = query(
+        resultsRef,
+        where("userId", "==", user?.uid),
+        orderBy("completedAt", "desc"),
+        limit(1)
+      );
 
-      if (error) {
-        if (error.code === "PGRST116") {
-          // No results found
-          navigate("/assessment");
-          return;
-        }
-        throw error;
+      const snapshot = await getDocs(resultsQuery);
+
+      if (snapshot.empty) {
+        navigate("/assessment");
+        return;
       }
 
-      // Type assertion for the scores field
+      const docSnapshot = snapshot.docs[0];
+      const data = docSnapshot.data() as RawAssessmentResult;
+      const completedAtValue = data.completedAt instanceof Timestamp
+        ? data.completedAt.toDate().toISOString()
+        : typeof data.completedAt === "string"
+          ? data.completedAt
+          : new Date().toISOString();
+
       const typedResult: AssessmentResult = {
-        id: data.id,
-        scores: data.scores as Record<string, number>,
-        ai_analysis: data.ai_analysis,
-        completed_at: data.completed_at,
+        id: docSnapshot.id,
+        scores: (data.scores || {}) as Record<string, number>,
+        aiAnalysis: (data as any).ai_analysis || data.aiAnalysis || null,
+        completedAt: completedAtValue,
       };
 
       setResult(typedResult);
 
-      // If no AI analysis yet, trigger it
-      if (!typedResult.ai_analysis) {
+      if (!typedResult.aiAnalysis) {
         await generateAIAnalysis(typedResult.id, typedResult.scores);
       }
     } catch (error: any) {
@@ -101,26 +117,13 @@ const Results = () => {
   const generateAIAnalysis = async (resultId: string, scores: Record<string, number>) => {
     setIsAnalyzing(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyze-career`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: JSON.stringify({ scores, resultId }),
-        }
-      );
+      const analysis = buildCareerAnalysis(scores);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to analyze");
-      }
+      await updateDoc(doc(firestore, "assessment_results", resultId), {
+        aiAnalysis: analysis,
+      });
 
-      const data = await response.json();
-      
-      setResult((prev) => prev ? { ...prev, ai_analysis: data.analysis } : null);
+      setResult((prev) => prev ? { ...prev, aiAnalysis: analysis } : null);
 
       toast({
         title: "Analysis Complete!",
@@ -163,7 +166,10 @@ const Results = () => {
   }
 
   const topCategories = getTopCategories(result.scores, 3);
-  const maxScore = Math.max(...Object.values(result.scores));
+  const scoreValues = Object.values(result.scores);
+  const maxScore = Math.max(...scoreValues);
+  const minScore = Math.min(...scoreValues);
+  const scoreRange = Math.max(maxScore - minScore, 1);
 
   return (
     <div className="min-h-screen bg-background">
@@ -219,7 +225,7 @@ const Results = () => {
               <div className="space-y-4">
                 {careerCategories.map((category) => {
                   const score = result.scores[category.id] || 0;
-                  const percentage = (score / maxScore) * 100;
+                  const percentage = ((score - minScore) / scoreRange) * 100;
                   
                   return (
                     <div key={category.id}>
@@ -228,7 +234,7 @@ const Results = () => {
                           <span>{category.icon}</span>
                           <span className="text-muted-foreground">{category.name}</span>
                         </span>
-                        <span className="text-sm font-medium">{score} pts</span>
+                        <span className="text-sm font-medium">{score.toFixed(2)} pts</span>
                       </div>
                       <div className="progress-bar">
                         <div 
@@ -260,7 +266,7 @@ const Results = () => {
                 </div>
                 <div>
                   <h3 className="font-display font-semibold text-lg">AI-Powered Career Analysis</h3>
-                  <p className="text-sm text-muted-foreground">Personalized insights from Gemini AI</p>
+                  <p className="text-sm text-muted-foreground">Personalized insights from CareerPath AI</p>
                 </div>
               </div>
 
@@ -279,7 +285,7 @@ const Results = () => {
                     Our AI is generating personalized career insights
                   </p>
                 </div>
-              ) : result.ai_analysis ? (
+              ) : result.aiAnalysis ? (
                 <div className="prose prose-sm max-w-none">
                   <ReactMarkdown
                     components={{
@@ -316,7 +322,7 @@ const Results = () => {
                       ),
                     }}
                   >
-                    {result.ai_analysis}
+                    {result.aiAnalysis}
                   </ReactMarkdown>
                 </div>
               ) : (
